@@ -430,11 +430,116 @@
     </section>
     
     <!-- Search Bar -->
-    <div class="search-container">
-        <div class="search-bar">
-            <input type="text" placeholder="Search a tool..." id="tool-search">
-            <button id="search-button">Search</button>
-        </div>
+    <div  // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('nav-menu').classList.toggle('active');
+        });
+        
+        // Enhanced search functionality
+        document.getElementById('search-button').addEventListener('click', performSearch);
+        document.getElementById('tool-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        // Also trigger search on input for live search
+        document.getElementById('tool-search').addEventListener('input', function() {
+            if (this.value.length > 2) {
+                performSearch();
+            } else if (this.value.length === 0) {
+                clearSearch();
+            }
+        });
+        
+        function performSearch() {
+            const searchTerm = document.getElementById('tool-search').value.toLowerCase().trim();
+            if (searchTerm === '') {
+                clearSearch();
+                return;
+            }
+            
+            // First clear any previous highlights
+            clearHighlights();
+            
+            // Get all tool cards
+            const toolCards = document.querySelectorAll('.tool-card');
+            let foundMatches = false;
+            
+            // Search through each tool card
+            toolCards.forEach(card => {
+                const toolName = card.getAttribute('data-name').toLowerCase();
+                const toolDesc = card.getAttribute('data-desc').toLowerCase();
+                const toolKeywords = card.getAttribute('data-keywords').toLowerCase();
+                
+                // Check if search term matches name, description or keywords
+                if (toolName.includes(searchTerm) || 
+                    toolDesc.includes(searchTerm) || 
+                    toolKeywords.includes(searchTerm)) {
+                    
+                    // Highlight the matching text in the card
+                    highlightText(card, searchTerm);
+                    
+                    // Add class to highlight the entire card
+                    card.classList.add('highlighted');
+                    
+                    // Scroll to the first matching card
+                    if (!foundMatches) {
+                        foundMatches = true;
+                        setTimeout(() => {
+                            card.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }, 100);
+                    }
+                }
+            });
+            
+            // Show message if no matches found
+            if (!foundMatches) {
+                document.getElementById('no-results').style.display = 'block';
+            } else {
+                document.getElementById('no-results').style.display = 'none';
+            }
+        }
+        
+        function highlightText(element, searchTerm) {
+            const textElements = element.querySelectorAll('h3, p');
+            
+            textElements.forEach(textEl => {
+                const text = textEl.textContent;
+                const regex = new RegExp(searchTerm, 'gi');
+                const newText = text.replace(regex, match => 
+                    `<span class="highlight-match">${match}</span>`
+                );
+                
+                if (newText !== text) {
+                    textEl.innerHTML = newText;
+                }
+            });
+        }
+        
+        function clearHighlights() {
+            // Remove card highlights
+            document.querySelectorAll('.tool-card.highlighted').forEach(card => {
+                card.classList.remove('highlighted');
+            });
+            
+            // Remove text highlights
+            document.querySelectorAll('.highlight-match').forEach(highlight => {
+                const parent = highlight.parentNode;
+                parent.textContent = parent.textContent;
+            });
+            
+            // Hide no results message
+            document.getElementById('no-results').style.display = 'none';
+        }
+        
+        function clearSearch() {
+            document.getElementById('tool-search').value = '';
+            clearHighlights();
+        }
     </div>
     
     <!-- Tools Sections -->
